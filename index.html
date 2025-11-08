@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RepuestOnline | Tienda de Repuestos para Autos</title>
+
+  <style>
+    /* ====== Tema oscuro base ====== */
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      background: #0f172a;
+      color: #f1f5f9;
+    }
+
+    /* ====== Header con imagen difuminada y transparencia ====== */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      text-align: center;
+      padding: 25px 0;
+      color: #f1f5f9;
+      box-shadow: 0 4px 10px #0005;
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(15, 23, 42, 0.6), rgba(15, 23, 42, 0.6)),
+        url('img/maz.jpg') center/cover no-repeat;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: background 0.3s ease, padding 0.3s ease;
+    }
+
+    header h1 {
+      color: #38bdf8;
+      margin: 0;
+      font-size: 2rem;
+      letter-spacing: 1px;
+    }
+
+    nav {
+      margin-top: 8px;
+    }
+
+    nav a {
+      color: #e2e8f0;
+      margin: 0 10px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.3s ease;
+    }
+
+    nav a:hover {
+      color: #38bdf8;
+    }
+
+    /* ====== Layout y componentes ====== */
+    main {
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    section {
+      margin-bottom: 40px;
+    }
+
+    .productos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: #1e293b;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 10px #0003;
+    }
+
+    .card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .card .info {
+      padding: 15px;
+    }
+
+    .card h3 {
+      margin: 0 0 10px 0;
+      color: #38bdf8;
+    }
+
+    .card p {
+      margin: 0 0 5px 0;
+      color: #cbd5e1;
+    }
+
+    button {
+      background: #38bdf8;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      color: #0f172a;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #0ea5e9;
+    }
+
+    input,
+    select,
+    textarea {
+      width: auto;
+      max-width: 100%;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: #f1f5f9;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th,
+    td {
+      padding: 8px;
+      border-bottom: 1px solid #334155;
+      text-align: left;
+    }
+
+    th {
+      color: #38bdf8;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .panel {
+      background: #1e293b;
+      padding: 16px;
+      border-radius: 10px;
+      margin-top: 12px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #1e293b;
+      color: #94a3b8;
+    }
+
+    .muted {
+      color: #cbd5e1;
+    }
+
+    /* ====== Video con estilo ====== */
+    .video-contenedor {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 15px #0005;
+      margin-top: 12px;
+    }
+
+    .video-contenedor video {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>🔧 RepuestOnline</h1>
+    <nav>
+      <a href="#inicio">Inicio</a>
+      <a href="#catalogo">Catálogo</a>
+      <a href="#login">Login</a>
+      <a href="#carrito">Carrito</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Inicio -->
+    <section id="inicio">
+      <h2>Bienvenido a RepuestOnline</h2>
+      <p>Tu tienda virtual especializada en repuestos para carro: filtros, baterías, frenos, llantas, aceites y más. Envío a todo el país.</p>
+      <p>Socios:
+        <a href="https://www.bosch.com/" target="_blank">Bosch</a>,
+        <a href="https://www.michelin.com/" target="_blank">Michelin</a>,
+        <a href="https://www.acdelco.com/" target="_blank">ACDelco</a>
+      </p>
+
+      <div class="video-contenedor">
+        <video controls autoplay muted>
+          <source src="video/car.mp4" type="video/mp4">
+          Tu navegador no soporta el video HTML5.
+        </video>
+      </div>
+    </section>
+
+    <!-- Catálogo -->
+    <section id="catalogo">
+      <h2>Catálogo de Repuestos</h2>
+      <div class="productos" id="productList"></div>
+      <p class="muted">Inicia sesión para poder agregar productos al carrito.</p>
+    </section>
+
+    <!-- Login -->
+    <section id="login" class="panel">
+      <h2>Inicio de Sesión</h2>
+      <div class="row">
+        <label>Usuario: <input type="text" id="user" placeholder="alumno" required></label>
+        <label>Contraseña: <input type="password" id="pass" placeholder="2025" required></label>
+        <button id="btnLogin">Ingresar</button>
+        <button id="btnSalir" disabled>Salir</button>
+        <span id="estadoLogin" class="muted"></span>
+      </div>
+    </section>
+
+    <!-- Carrito -->
+    <section id="carrito" class="panel hidden">
+      <h2>Carrito de Compras</h2>
+      <div class="row">
+        <button id="btnVerCarrito">Mostrar detalle</button>
+        <button id="btnVaciar">Vaciar carrito</button>
+      </div>
+
+      <div id="detalleCarrito" class="hidden">
+        <table>
+          <thead>
+            <tr><th>Producto</th><th>Precio</th><th>Cant.</th><th>Subtotal</th></tr>
+          </thead>
+          <tbody id="cartBody"></tbody>
+          <tfoot>
+            <tr><td colspan="3">Subtotal</td><td id="subTotal">Q0.00</td></tr>
+            <tr><td colspan="3">IVA (12%)</td><td id="iva">Q0.00</td></tr>
+            <tr><td colspan="3">
+              Envío
+              <select id="envio">
+                <option value="standard">Estándar (Q25)</option>
+                <option value="express">Exprés (Q45)</option>
+                <option value="pickup">Retiro (Q0)</option>
+              </select>
+            </td><td id="envioCosto">Q0.00</td></tr>
+            <tr><td colspan="3">Total</td><td id="total">Q0.00</td></tr>
+          </tfoot>
+        </table>
+
+        <div class="row" style="margin-top:10px">
+          <span>Método de pago:</span>
+          <label><input type="radio" name="pago" value="tarjeta" checked> Tarjeta</label>
+          <label><input type="radio" name="pago" value="transferencia"> Transferencia</label>
+          <label><input type="radio" name="pago" value="contraentrega"> Contraentrega</label>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <label style="flex:1">Notas (opcional):
+            <textarea id="notas" rows="2" style="width:100%" placeholder="Ej. entregar por la tarde, referencia del domicilio..."></textarea>
+          </label>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <label><input type="checkbox" id="terminos"> Acepto términos y condiciones</label>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <button id="btnPagar">Concluir compra</button>
+        </div>
+
+        <div id="resultadoCheckout" class="muted" style="margin-top:10px"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    © 2025 RepuestOnline - Proyecto educativo.
+  </footer>
+
+  <!-- Script principal -->
+  <script src="script.js"></script>
+
+  <!-- Efecto transparente al hacer scroll -->
+  <script>
+    window.addEventListener("scroll", () => {
+      const header = document.querySelector("header");
+      if (window.scrollY > 50) {
+        header.style.background =
+          "linear-gradient(rgba(15,23,42,0.3), rgba(15,23,42,0.3)), url('img/fondo-header.jpg') center/cover no-repeat";
+        header.style.padding = "15px 0";
+      } else {
+        header.style.background =
+          "linear-gradient(rgba(15,23,42,0.6), rgba(15,23,42,0.6)), url('img/fondo-header.jpg') center/cover no-repeat";
+        header.style.padding = "25px 0";
+      }
+    });
+  </script>
+</body>
+</html>
