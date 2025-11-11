@@ -1,8 +1,8 @@
 // ============================
-// RepuestOnline - script.js (versión estable)
+// RepuestOnline - script.js (con registro + campos dinámicos)
 // ============================
 
-// Lista de productos
+// Productos
 const productos = [
   { id: 1, nombre: 'Filtro de aceite Bosch', precio: 85, img: 'img/filtro.jpg' },
   { id: 2, nombre: 'Batería ACDelco 12V', precio: 950, img: 'img/bateria.jpg' },
@@ -14,18 +14,16 @@ const productos = [
   { id: 8, nombre: 'Cigüeñal', precio: 500, img: 'img/cigueñal.jpg' }
 ];
 
-// Carrito y estado de sesión
-const cart = new Map();
+// Estado
+const cart = new Map(); // id -> {producto, cantidad}
 let logged = false;
 
-// Atajos
-const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => document.querySelectorAll(sel);
+// Helpers
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
 const fmtQ = (n) => `Q${n.toFixed(2)}`;
 
-// ============================
-// Renderizar productos
-// ============================
+// Render catálogo
 function renderProductos() {
   const cont = $("#productList");
   cont.innerHTML = "";
@@ -44,9 +42,7 @@ function renderProductos() {
   });
 }
 
-// ============================
 // Login UI
-// ============================
 function updateLoginUI() {
   $("#estadoLogin").textContent = logged ? "Sesión activa" : "No has iniciado sesión";
   $("#btnSalir").disabled = !logged;
@@ -54,9 +50,7 @@ function updateLoginUI() {
   $$("[data-add]").forEach((b) => (b.disabled = !logged));
 }
 
-// ============================
-// Agregar producto al carrito
-// ============================
+// Carrito
 function addToCart(id) {
   const prod = productos.find((x) => x.id === id);
   const qty = Math.max(1, parseInt($("#qty-" + id).value || "1", 10));
@@ -66,9 +60,6 @@ function addToCart(id) {
   alert(`${qty} × "${prod.nombre}" agregado(s) al carrito`);
 }
 
-// ============================
-// Renderizar carrito
-// ============================
 function envioCosto() {
   const sel = $("#envio");
   if (!sel) return 25;
@@ -101,9 +92,47 @@ function renderCart() {
   $("#resultadoCheckout").textContent = "";
 }
 
-// ============================
-// Eventos principales
-// ============================
+// Dinámica: campos extra (tarjeta / dirección)
+function renderDatosExtra() {
+  const metodoPago = (document.querySelector('input[name="pago"]:checked') || {}).value;
+  const tipoEnvio = $("#envio")?.value;
+  const datosExtra = $("#datosExtra");
+  if (!datosExtra) return;
+
+  let html = "";
+
+  if (metodoPago === "tarjeta") {
+    html += `
+      <div class="panel">
+        <h4>Datos de la tarjeta</h4>
+        <label>Número de tarjeta:
+          <input type="text" id="numTarjeta" maxlength="16" placeholder="0000 0000 0000 0000">
+        </label>
+        <label>Fecha de vencimiento:
+          <input type="month" id="vencimiento">
+        </label>
+        <label>CVV:
+          <input type="password" id="cvv" maxlength="3" placeholder="123">
+        </label>
+      </div>
+    `;
+  }
+
+  if (tipoEnvio !== "pickup") {
+    html += `
+      <div class="panel">
+        <h4>Dirección de entrega</h4>
+        <label>Dirección exacta:
+          <textarea id="direccion" rows="2" style="width:100%" placeholder="Ej. 3ra calle 10-45 zona 10, Ciudad de Guatemala"></textarea>
+        </label>
+      </div>
+    `;
+  }
+
+  datosExtra.innerHTML = html;
+}
+
+// Eventos
 document.addEventListener("DOMContentLoaded", () => {
   renderProductos();
   updateLoginUI();
@@ -113,32 +142,62 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target.dataset.add) addToCart(parseInt(e.target.dataset.add));
   });
 
-  // Mostrar detalle del carrito
+  // Ver detalle
   $("#btnVerCarrito").addEventListener("click", () => {
     $("#detalleCarrito").classList.toggle("hidden");
     renderCart();
+    renderDatosExtra();
   });
 
-  // Vaciar carrito
+  // Vaciar
   $("#btnVaciar").addEventListener("click", () => {
     cart.clear();
     renderCart();
+    renderDatosExtra();
   });
 
-  // Cambiar tipo de envío
+  // Cambios en envío o método de pago → actualizar campos extra y totales
   document.addEventListener("change", (e) => {
-    if (e.target.id === "envio") renderCart();
+    if (e.target.id === "envio" || e.target.name === "pago") {
+      renderCart();
+      renderDatosExtra();
+    }
   });
 
-  // Login
+  // ===== Registro de usuario =====
+  $("#btnRegistrar").addEventListener("click", () => {
+    const nombre = $("#regNombre").value.trim();
+    const correo = $("#regCorreo").value.trim();
+    const pass = $("#regPass").value.trim();
+
+    if (!nombre || !correo || !pass) {
+      alert("Por favor, completa todos los campos del registro.");
+      return;
+    }
+
+    const userData = { nombre, correo, pass };
+    localStorage.setItem("usuarioRegistrado", JSON.stringify(userData));
+    alert("Registro exitoso. Ahora puedes iniciar sesión con tu cuenta.");
+
+    $("#regNombre").value = "";
+    $("#regCorreo").value = "";
+    $("#regPass").value = "";
+  });
+
+  // ===== Login =====
   $("#btnLogin").addEventListener("click", () => {
     const u = $("#user").value.trim();
     const p = $("#pass").value.trim();
-    if (u === "alumno" && p === "2025") {
+    const registrado = JSON.parse(localStorage.getItem("usuarioRegistrado"));
+
+    const okAlumno = (u === "alumno" && p === "2025");
+    const okRegistrado = (registrado && registrado.correo === u && registrado.pass === p);
+
+    if (okAlumno || okRegistrado) {
       logged = true;
       updateLoginUI();
       renderProductos();
-      alert("Bienvenido, alumno.");
+      alert("Bienvenido " + (okRegistrado ? registrado.nombre : "alumno") + ".");
       location.hash = "#catalogo";
     } else {
       alert("Usuario o contraseña incorrectos.");
@@ -153,34 +212,48 @@ document.addEventListener("DOMContentLoaded", () => {
     alert("Has cerrado sesión.");
   });
 
-  // Finalizar compra
+  // Concluir compra
   $("#btnPagar").addEventListener("click", () => {
-    if (cart.size === 0) {
-      alert("Carrito vacío.");
-      return;
-    }
-    if (!$("#terminos").checked) {
-      alert("Debes aceptar los términos y condiciones.");
-      return;
-    }
+    if (cart.size === 0) { alert("Carrito vacío."); return; }
+    if (!$("#terminos").checked) { alert("Debes aceptar los términos y condiciones."); return; }
+
     renderCart();
+
     const pago = (document.querySelector('input[name="pago"]:checked') || {}).value || "tarjeta";
     const total = $("#total").textContent;
     const envioSel = $("#envio").value;
     const notas = $("#notas").value.trim();
+
+    const direccion = $("#direccion")?.value || "No aplica";
+    const numTarjeta = $("#numTarjeta")?.value || "";
+    const venc = $("#vencimiento")?.value || "";
+    const cvv = $("#cvv")?.value || "";
+
+    // Validaciones mínimas de demostración
+    if (pago === "tarjeta" && (!numTarjeta || !venc || !cvv)) {
+      alert("Completa los datos de la tarjeta.");
+      return;
+    }
+    if (envioSel !== "pickup" && (!direccion || direccion.length < 6)) {
+      alert("Ingresa una dirección válida para la entrega.");
+      return;
+    }
+
     $("#resultadoCheckout").innerHTML = `
       <div class="panel">
         ✔️ <b>Compra finalizada</b><br>
         Método de pago: <b>${pago}</b><br>
         Tipo de envío: <b>${envioSel}</b><br>
         Total a pagar: <b>${total}</b><br>
-        ${notas ? `Notas: <i>${notas}</i>` : ""}
+        ${envioSel !== "pickup" ? `Dirección: ${direccion}<br>` : ""}
+        ${pago === "tarjeta" ? `Tarjeta: **** **** **** ${numTarjeta.slice(-4)}<br>` : ""}
+        ${notas ? `Notas: <i>${notas}</i><br>` : ""}
       </div>
     `;
     alert("¡Gracias por tu compra!");
   });
 
-  // ===== Header efecto de transparencia =====
+  // ===== Header transparente estable =====
   const header = document.querySelector("header");
   const onScroll = () => {
     if (window.scrollY > 50) header.classList.add("scrolled");
