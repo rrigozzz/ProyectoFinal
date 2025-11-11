@@ -1,5 +1,5 @@
 // ============================
-// RepuestOnline - script.js (registro + campos dinámicos + fix listeners)
+// RepuestOnline - script.js (robusto: registro + tarjeta + dirección)
 // ============================
 
 // Productos
@@ -15,11 +15,11 @@ const productos = [
 ];
 
 // Estado
-const cart = new Map(); // id -> {producto, cantidad}
+const cart = new Map();
 let logged = false;
 
 // Helpers
-const $ = (s) => document.querySelector(s);
+const $  = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
 const fmtQ = (n) => `Q${n.toFixed(2)}`;
 
@@ -93,10 +93,10 @@ function renderCart() {
   $("#resultadoCheckout").textContent = "";
 }
 
-// ===== Dinámica: campos extra (tarjeta / dirección)
+// === Campos dinámicos (tarjeta / dirección)
 function renderDatosExtra() {
-  const metodoPago = (document.querySelector('input[name="pago"]:checked') || {}).value;
-  const tipoEnvio = $("#envio")?.value;
+  const metodoPago = (document.querySelector('input[name="pago"]:checked') || {}).value || "tarjeta";
+  const tipoEnvio = $("#envio")?.value || "standard";
   const datosExtra = $("#datosExtra");
   if (!datosExtra) return;
 
@@ -138,48 +138,43 @@ document.addEventListener("DOMContentLoaded", () => {
   renderProductos();
   updateLoginUI();
   renderCart();
-  renderDatosExtra(); // pinta los campos iniciales (Tarjeta por defecto + envío por defecto)
+  renderDatosExtra(); // pinta según 'tarjeta' por defecto y envío actual
 
   // Agregar producto
   $("#catalogo").addEventListener("click", (e) => {
     if (e.target.dataset.add) addToCart(parseInt(e.target.dataset.add));
   });
 
-  // Ver detalle
+  // Mostrar/ocultar detalle del carrito
   $("#btnVerCarrito").addEventListener("click", () => {
     $("#detalleCarrito").classList.toggle("hidden");
     renderCart();
     renderDatosExtra();
   });
 
-  // Vaciar
+  // Vaciar carrito
   $("#btnVaciar").addEventListener("click", () => {
     cart.clear();
     renderCart();
     renderDatosExtra();
   });
 
-  // ===== Escuchar cambios explícitos =====
-  // Radios de método de pago
-  $$('input[name="pago"]').forEach((r) => {
-    r.addEventListener('change', () => {
+  // 🔁 Delegación de eventos: funciona aunque los radios estén dentro de un panel oculto
+  document.addEventListener("change", (e) => {
+    if (e.target.matches('input[name="pago"]')) {
       renderDatosExtra();
-    });
-  });
-  // Select de envío
-  const envioSel = $("#envio");
-  if (envioSel) {
-    envioSel.addEventListener('change', () => {
+    }
+    if (e.target.matches('#envio')) {
       renderCart();
       renderDatosExtra();
-    });
-  }
+    }
+  });
 
-  // ===== Registro de usuario =====
+  // ===== Registro =====
   $("#btnRegistrar").addEventListener("click", () => {
     const nombre = $("#regNombre").value.trim();
     const correo = $("#regCorreo").value.trim();
-    const pass = $("#regPass").value.trim();
+    const pass   = $("#regPass").value.trim();
 
     if (!nombre || !correo || !pass) {
       alert("Por favor, completa todos los campos del registro.");
@@ -232,39 +227,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const pago = (document.querySelector('input[name="pago"]:checked') || {}).value || "tarjeta";
     const total = $("#total").textContent;
-    const envioSel2 = $("#envio").value;
+    const envioSel = $("#envio").value;
     const notas = $("#notas").value.trim();
 
-    const direccion = $("#direccion")?.value || "No aplica";
+    const direccion  = $("#direccion")?.value || "No aplica";
     const numTarjeta = $("#numTarjeta")?.value || "";
-    const venc = $("#vencimiento")?.value || "";
-    const cvv = $("#cvv")?.value || "";
+    const venc       = $("#vencimiento")?.value || "";
+    const cvv        = $("#cvv")?.value || "";
 
     // Validaciones mínimas (demo)
-    if (pago === "tarjeta" && (!numTarjeta || !venc || !cvv)) {
-      alert("Completa los datos de la tarjeta.");
-      return;
+    if (pago === "tarjeta") {
+      if (!/^\d{16}$/.test(numTarjeta)) { alert("El número de tarjeta debe tener 16 dígitos."); return; }
+      if (!venc) { alert("Ingresa la fecha de vencimiento."); return; }
+      if (!/^\d{3}$/.test(cvv)) { alert("El CVV debe tener 3 dígitos."); return; }
     }
-    if (pago === "tarjeta" && !/^\d{16}$/.test(numTarjeta)) {
-      alert("El número de tarjeta debe tener 16 dígitos.");
-      return;
-    }
-    if (pago === "tarjeta" && !/^\d{3}$/.test(cvv)) {
-      alert("El CVV debe tener 3 dígitos.");
-      return;
-    }
-    if (envioSel2 !== "pickup" && (!direccion || direccion.length < 6)) {
-      alert("Ingresa una dirección válida para la entrega.");
-      return;
+    if (envioSel !== "pickup" && (!direccion || direccion.length < 6)) {
+      alert("Ingresa una dirección válida para la entrega."); return;
     }
 
     $("#resultadoCheckout").innerHTML = `
       <div class="panel">
         ✔️ <b>Compra finalizada</b><br>
         Método de pago: <b>${pago}</b><br>
-        Tipo de envío: <b>${envioSel2}</b><br>
+        Tipo de envío: <b>${envioSel}</b><br>
         Total a pagar: <b>${total}</b><br>
-        ${envioSel2 !== "pickup" ? `Dirección: ${direccion}<br>` : ""}
+        ${envioSel !== "pickup" ? `Dirección: ${direccion}<br>` : ""}
         ${pago === "tarjeta" ? `Tarjeta: **** **** **** ${numTarjeta.slice(-4)}<br>` : ""}
         ${notas ? `Notas: <i>${notas}</i><br>` : ""}
       </div>
