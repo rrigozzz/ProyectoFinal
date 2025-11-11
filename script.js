@@ -1,5 +1,5 @@
 // ============================
-// RepuestOnline - script.js (con registro + campos dinámicos)
+// RepuestOnline - script.js (registro + campos dinámicos + fix listeners)
 // ============================
 
 // Productos
@@ -68,6 +68,7 @@ function envioCosto() {
 
 function renderCart() {
   const body = $("#cartBody");
+  if (!body) return;
   body.innerHTML = "";
   let subtotal = 0;
 
@@ -92,7 +93,7 @@ function renderCart() {
   $("#resultadoCheckout").textContent = "";
 }
 
-// Dinámica: campos extra (tarjeta / dirección)
+// ===== Dinámica: campos extra (tarjeta / dirección)
 function renderDatosExtra() {
   const metodoPago = (document.querySelector('input[name="pago"]:checked') || {}).value;
   const tipoEnvio = $("#envio")?.value;
@@ -106,13 +107,13 @@ function renderDatosExtra() {
       <div class="panel">
         <h4>Datos de la tarjeta</h4>
         <label>Número de tarjeta:
-          <input type="text" id="numTarjeta" maxlength="16" placeholder="0000 0000 0000 0000">
+          <input type="text" id="numTarjeta" maxlength="16" pattern="\\d{16}" placeholder="0000000000000000">
         </label>
         <label>Fecha de vencimiento:
           <input type="month" id="vencimiento">
         </label>
         <label>CVV:
-          <input type="password" id="cvv" maxlength="3" placeholder="123">
+          <input type="password" id="cvv" maxlength="3" pattern="\\d{3}" placeholder="123">
         </label>
       </div>
     `;
@@ -136,6 +137,8 @@ function renderDatosExtra() {
 document.addEventListener("DOMContentLoaded", () => {
   renderProductos();
   updateLoginUI();
+  renderCart();
+  renderDatosExtra(); // pinta los campos iniciales (Tarjeta por defecto + envío por defecto)
 
   // Agregar producto
   $("#catalogo").addEventListener("click", (e) => {
@@ -156,13 +159,21 @@ document.addEventListener("DOMContentLoaded", () => {
     renderDatosExtra();
   });
 
-  // Cambios en envío o método de pago → actualizar campos extra y totales
-  document.addEventListener("change", (e) => {
-    if (e.target.id === "envio" || e.target.name === "pago") {
+  // ===== Escuchar cambios explícitos =====
+  // Radios de método de pago
+  $$('input[name="pago"]').forEach((r) => {
+    r.addEventListener('change', () => {
+      renderDatosExtra();
+    });
+  });
+  // Select de envío
+  const envioSel = $("#envio");
+  if (envioSel) {
+    envioSel.addEventListener('change', () => {
       renderCart();
       renderDatosExtra();
-    }
-  });
+    });
+  }
 
   // ===== Registro de usuario =====
   $("#btnRegistrar").addEventListener("click", () => {
@@ -221,7 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const pago = (document.querySelector('input[name="pago"]:checked') || {}).value || "tarjeta";
     const total = $("#total").textContent;
-    const envioSel = $("#envio").value;
+    const envioSel2 = $("#envio").value;
     const notas = $("#notas").value.trim();
 
     const direccion = $("#direccion")?.value || "No aplica";
@@ -229,12 +240,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const venc = $("#vencimiento")?.value || "";
     const cvv = $("#cvv")?.value || "";
 
-    // Validaciones mínimas de demostración
+    // Validaciones mínimas (demo)
     if (pago === "tarjeta" && (!numTarjeta || !venc || !cvv)) {
       alert("Completa los datos de la tarjeta.");
       return;
     }
-    if (envioSel !== "pickup" && (!direccion || direccion.length < 6)) {
+    if (pago === "tarjeta" && !/^\d{16}$/.test(numTarjeta)) {
+      alert("El número de tarjeta debe tener 16 dígitos.");
+      return;
+    }
+    if (pago === "tarjeta" && !/^\d{3}$/.test(cvv)) {
+      alert("El CVV debe tener 3 dígitos.");
+      return;
+    }
+    if (envioSel2 !== "pickup" && (!direccion || direccion.length < 6)) {
       alert("Ingresa una dirección válida para la entrega.");
       return;
     }
@@ -243,9 +262,9 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="panel">
         ✔️ <b>Compra finalizada</b><br>
         Método de pago: <b>${pago}</b><br>
-        Tipo de envío: <b>${envioSel}</b><br>
+        Tipo de envío: <b>${envioSel2}</b><br>
         Total a pagar: <b>${total}</b><br>
-        ${envioSel !== "pickup" ? `Dirección: ${direccion}<br>` : ""}
+        ${envioSel2 !== "pickup" ? `Dirección: ${direccion}<br>` : ""}
         ${pago === "tarjeta" ? `Tarjeta: **** **** **** ${numTarjeta.slice(-4)}<br>` : ""}
         ${notas ? `Notas: <i>${notas}</i><br>` : ""}
       </div>
