@@ -170,25 +170,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ===== Registro =====
-  $("#btnRegistrar").addEventListener("click", () => {
-    const nombre = $("#regNombre").value.trim();
-    const correo = $("#regCorreo").value.trim();
-    const pass   = $("#regPass").value.trim();
+// ===== Registro de usuario =====
+$("#btnRegistrar").addEventListener("click", () => {
+  const nombre = $("#regNombre").value.trim();
+  const correo = $("#regCorreo").value.trim();
+  const pass   = $("#regPass").value.trim();
 
-    if (!nombre || !correo || !pass) {
-      alert("Por favor, completa todos los campos del registro.");
-      return;
-    }
+  if (!nombre || !correo || !pass) {
+    alert("Por favor, completa todos los campos del registro.");
+    return;
+  }
 
-    const userData = { nombre, correo, pass };
-    localStorage.setItem("usuarioRegistrado", JSON.stringify(userData));
-    alert("Registro exitoso. Ahora puedes iniciar sesión con tu cuenta.");
+  const userData = { nombre, correo, pass };
+  localStorage.setItem("usuarioRegistrado", JSON.stringify(userData));
 
-    $("#regNombre").value = "";
-    $("#regCorreo").value = "";
-    $("#regPass").value = "";
-  });
+  // Mensaje visual
+  const msg = $("#msgRegistro");
+  msg.textContent = `✅ Usuario "${nombre}" registrado correctamente.`;
+  msg.style.color = "#38bdf8";
+
+  alert("Registro exitoso. Ahora puedes iniciar sesión con tu cuenta.");
+
+  // Limpia los campos
+  $("#regNombre").value = "";
+  $("#regCorreo").value = "";
+  $("#regPass").value = "";
+});
 
   // ===== Login =====
   $("#btnLogin").addEventListener("click", () => {
@@ -268,3 +275,4 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("scroll", onScroll);
   onScroll();
 });
+
